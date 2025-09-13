@@ -35,7 +35,24 @@ function arrayBufferToBase64(buffer: ArrayBuffer) {
   return window.btoa(binary);
 }
 
-export class AudioRecorder extends EventEmitter {
+// FIX: Switched from extending EventEmitter to using composition to resolve type errors.
+export class AudioRecorder {
+  private emitter = new EventEmitter();
+
+  public on(event: 'data' | 'volume', fn: (...args: any[]) => void, context?: any): this {
+    this.emitter.on(event, fn, context);
+    return this;
+  }
+
+  public off(event: 'data' | 'volume', fn?: (...args: any[]) => void, context?: any, once?: boolean): this {
+    this.emitter.off(event, fn, context, once);
+    return this;
+  }
+
+  private emit(event: 'data' | 'volume', ...args: any[]): boolean {
+    return this.emitter.emit(event, ...args);
+  }
+
   stream: MediaStream | undefined;
   audioContext: AudioContext | undefined;
   source: MediaStreamAudioSourceNode | undefined;
@@ -45,9 +62,7 @@ export class AudioRecorder extends EventEmitter {
 
   private starting: Promise<void> | null = null;
 
-  constructor(public sampleRate = 16000) {
-    super();
-  }
+  constructor(public sampleRate = 16000) {}
 
   async start() {
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {

@@ -34,7 +34,8 @@ export default function useTilt({
 }: UseTiltProps) {
   const [angle, setAngle] = useState<number>(0);
   const [targetAngle, setTargetAngle] = useState<number>(0);
-  const timeoutRef = useRef<NodeJS.Timeout>(undefined);
+  // Fix: Changed NodeJS.Timeout to ReturnType<typeof setTimeout> to use the correct type for setTimeout's return value in a browser environment.
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const animationFrameRef = useRef<number>(0);
 
   // Reset to center when not active

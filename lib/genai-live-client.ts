@@ -67,7 +67,24 @@ export interface LiveClientEventTypes {
   turncomplete: () => void;
 }
 
-export class GenAILiveClient extends EventEmitter<LiveClientEventTypes> {
+// FIX: Switched from extending EventEmitter to using composition to resolve type errors.
+export class GenAILiveClient {
+  private emitter = new EventEmitter<LiveClientEventTypes>();
+
+  public on<T extends keyof LiveClientEventTypes>(event: T, listener: LiveClientEventTypes[T]): this {
+    this.emitter.on(event, listener);
+    return this;
+  }
+
+  public off<T extends keyof LiveClientEventTypes>(event: T, listener: LiveClientEventTypes[T]): this {
+    this.emitter.off(event, listener);
+    return this;
+  }
+
+  protected emit<T extends keyof LiveClientEventTypes>(event: T, ...args: Parameters<LiveClientEventTypes[T]>): boolean {
+    return this.emitter.emit(event, ...args);
+  }
+
   public readonly model: string = DEFAULT_LIVE_API_MODEL;
 
   protected readonly client: GoogleGenAI;
@@ -84,7 +101,6 @@ export class GenAILiveClient extends EventEmitter<LiveClientEventTypes> {
    * @param model - Optional model name to override the default model
    */
   constructor(apiKey: string, model?: string) {
-    super();
     if (model) this.model = model;
 
     this.client = new GoogleGenAI({
